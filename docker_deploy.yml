@@ -1,0 +1,37 @@
+- name: Deploy Apache Docker container
+  hosts: your_target_hosts
+  become: true
+  tasks:
+    - name: Pull Apache Docker image
+      docker_image:
+        name: httpd
+        source: pull
+
+    - name: Run Apache Docker container
+      docker_container:
+        name: apache_container
+        image: httpd
+        ports:
+          - "80:80"
+        networks:
+          - name: apache_network
+            ipv4_address: "172.168.10.2"
+        state: started
+
+- name: Configure networking for Apache Docker container
+  hosts: your_target_hosts
+  become: true
+  tasks:
+    - name: Create Docker network
+      docker_network:
+        name: apache_network
+        driver: bridge
+        ipam:
+          config:
+            - subnet: "172.168.10.0/30"
+
+    - name: Ensure Apache service is accessible from the host machine
+      firewalld:
+        service: http
+        permanent: yes
+        state: enabled
